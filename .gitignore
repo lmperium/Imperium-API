@@ -1,0 +1,7 @@
+instance/
+migrations/
+venv/
+__pycache__/
+.idea/
+
+*.sql
