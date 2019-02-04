@@ -17,7 +17,6 @@ class DatabaseTest(unittest.TestCase):
             'last_name': 'Doe',
             'username': 'TestUser123',
             'password': 'EWesWQ211',
-            'salt': 'theSalt'
         }
 
     def test_analyst_registration(self):
@@ -27,8 +26,10 @@ class DatabaseTest(unittest.TestCase):
         self.assertIn('Analyst Registered', str(response.data))
 
     def test_get_all_analysts(self):
-        # response = self.client().post('/analysts', data=self.analyst_info)
-        # self.assertEqual(response.status_code, 201)
+        response = self.client().post('/analysts', data=self.analyst_info)
+        self.assertEqual(response.status_code, 201)
+
+        # Check for duplicates
         response = self.client().get('/analysts')
         self.assertEqual(response.status_code, 200)
         self.assertIn('John', str(response.data))
