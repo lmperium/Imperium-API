@@ -12,7 +12,7 @@ def create_app(config_name):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Blueprint register
-    from app.api import bp as api_bp
+    from app.api.analysts import bp as api_bp
     from app.auth import bp as auth_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')

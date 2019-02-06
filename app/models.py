@@ -20,7 +20,7 @@ class Analyst(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
-    def to_dict(self, data, include_email=False):
+    def to_dict(self, include_email=False):
         data = {
             'analyst_id': self.analyst_id,
             'first_name': self.first_name,
@@ -40,6 +40,20 @@ class Analyst(db.Model):
                 setattr(self, field, data[field])
         if new_user and 'password' in data:
             self.set_password(data['password'])
+
+    @staticmethod
+    def to_collection_dict(response) -> dict:
+        """
+        Convert a collection of items into a Python dictionary object.
+        :param response: SQLAlchemy query.all() Tuple
+        :return: dictionary object data containing the list of items
+        """
+
+        data = {
+            'analysts': [item.to_dict() for item in response]
+        }
+
+        return data
 
 
 class Command(db.Model):
