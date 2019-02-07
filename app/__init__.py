@@ -1,6 +1,6 @@
+from instance.config import app_config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from instance.config import app_config
 
 db = SQLAlchemy()
 
