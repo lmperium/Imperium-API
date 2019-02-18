@@ -1,3 +1,4 @@
+from app import db
 from app.api.errors import error_response
 from app.models import Analyst
 from flask import Blueprint
@@ -20,14 +21,48 @@ def get_analyst(analyst_id: int):
 def get_analysts():
     response = Analyst.query.all()
 
-    if response is None:
-        return error_response(404, 'Resource not found.')
-
     return jsonify(Analyst.to_collection_dict(response))
 
 
 @bp.route('/analysts', methods=['POST'])
 def register_analyst():
-    data = request.get_json()
-    print(data)
-    pass
+    data = request.get_json(force=True) or {}
+
+    # Validate required fields
+    if not _is_valid(data):
+        return error_response(status_code=400, message='Missing values.')
+
+    if _user_exists(data):
+        return error_response(status_code=409, message='Analyst already registered')
+
+    analyst = Analyst()
+
+    # Convert received data to Analyst object
+    analyst.from_dict(data=data, new_user=True)
+
+    db.session.add(analyst)
+    db.session.commit()
+
+    response = jsonify(analyst.to_dict(include_email=True))
+    response.status_code = 201
+    return response
+
+
+def _is_valid(data):
+    required_fields = ['username', 'email', 'password', 'first_name', 'last_name']
+
+    for field in required_fields:
+        if field not in data:
+            return False
+
+    return True
+
+
+def _user_exists(data):
+    if Analyst.query.filter_by(username=data['username']).first():
+        return True
+
+    if Analyst.query.filter_by(email=data['email']).first():
+        return True
+
+    return False
