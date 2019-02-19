@@ -5,6 +5,7 @@ __pycache__/
 .idea/
 object_representations
 
+.env
 *.pyc
 *.sql
 
