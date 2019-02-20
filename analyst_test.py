@@ -67,6 +67,35 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('John', str(response.data))
 
+    def test_analyst_login(self):
+        """ Test API analyst login with JWT."""
+        response = self.client().post('api/analysts', data=self.analyst_info)
+        self.assertEqual(response.status_code, 201)
+
+        # Test missing values
+        response = self.client().post('api/login', data=json.dumps(dict(password='pass')))
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Must include', str(response.data))
+
+        # Test incorrect password or email
+        response = self.client().post('api/login', data=json.dumps(dict(email='test@mail.com', password='incorrect')))
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('Incorrect Email or password', str(response.data))
+
+        # Test successful login
+        email = 'test@mail.com'
+        password = 'EWesWQ211'
+
+        response = self.client().post('api/login', data=json.dumps(dict(email=email, password=password)))
+        self.assertEqual(response.status_code, 200)
+
+        res_json = json.loads(response.data.decode('utf-8').replace("'", "\'"))
+
+        self.assertIn('access_token', str(res_json))
+        self.assertIn('refresh_token', str(res_json))
+        self.assertIsNotNone(res_json['access_token'])
+        self.assertIsNotNone(res_json['refresh_token'])
+
 
 if __name__ == '__main__':
     unittest.main()
