@@ -17,8 +17,8 @@ def create_app(config_name):
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET', default=None)
 
     # Blueprint register
-    from imperium_api.api.analysts import bp as api_bp
-    from imperium_api.auth.auth import bp as auth_bp
+    from app.api.analysts import bp as api_bp
+    from app.auth.auth import bp as auth_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api')
