@@ -3,11 +3,13 @@ from app.api.errors import error_response
 from app.models import Analyst
 from flask import Blueprint
 from flask import jsonify, request
+from flask_jwt_extended import jwt_required
 
 bp = Blueprint('api', __name__)
 
 
 @bp.route('/analysts/<int:analyst_id>', methods=['GET'])
+@jwt_required
 def get_analyst(analyst_id: int):
     analyst = Analyst.query.get(analyst_id)
 
@@ -18,6 +20,7 @@ def get_analyst(analyst_id: int):
 
 
 @bp.route('/analysts', methods=['GET'])
+@jwt_required
 def get_analysts():
     response = Analyst.query.all()
 
