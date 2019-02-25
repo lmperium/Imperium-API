@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask import jsonify, request
 from flask_jwt_extended import create_access_token, create_refresh_token
-from app.api import errors
-from app.models import Analyst
+from imperium_api.api import errors
+from imperium_api.models import Analyst
 
 bp = Blueprint('auth', __name__)
 

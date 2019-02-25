@@ -1,6 +1,6 @@
-from app import db
-from app.api.errors import error_response
-from app.models import Analyst
+from imperium_api import db
+from imperium_api.api.errors import error_response
+from imperium_api.models import Analyst
 from flask import Blueprint
 from flask import jsonify, request
 from flask_jwt_extended import jwt_required

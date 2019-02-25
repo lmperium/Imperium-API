@@ -1,4 +1,5 @@
 from app import db
+from sqlalchemy.dialects.postgresql import JSON
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -9,8 +10,8 @@ class Analyst(db.Model):
     analyst_id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(60), unique=True, nullable=False)
-    username = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(60), unique=True, index=True, nullable=False)
+    username = db.Column(db.String(100), unique=True, index=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     registered_date = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
 
@@ -56,13 +57,37 @@ class Analyst(db.Model):
         return data
 
 
+class Job(db.Model):
+    __tablename__ = 'job'
+
+    job_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), nullable=False)
+    target = db.Column(db.String(250), nullable=False)
+    description = db.Column(JSON, nullable=False)
+    start_time = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
+    end_time = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(50), nullable=False)
+    analyst_id = db.Column(db.Integer, db.ForeignKey('analyst.analyst_id'))
+
+
+class Worker(db.Model):
+
+    __tablename__ = 'worker'
+
+    worker_id = db.Column(db.Integer, primary_key=True)
+    registered_date = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    last_seen = db.Column(db.DateTime, nullable=False)
+    startup_info = db.Column(JSON)
+
+
 class Command(db.Model):
 
     __tablename__ = 'command'
 
     command_id = db.Column(db.Integer, primary_key=True)
-    command_name = db.Column(db.String(50), nullable=False)
-    arguments = db.Column(db.String(255), nullable=True)
-    state = db.Column(db.String(10), nullable=True)
+    command_name = db.Column(db.String(50), index=True, nullable=False)
+    status = db.Column(db.String(50), nullable=False)
     response = db.Column(db.Text, nullable=True)
-    analyst_id = db.Column(db.Integer, db.ForeignKey('analyst.analyst_id'))
+    job_id = db.Column(db.Integer, db.ForeignKey('job.job_id'))
+    worker_id = db.Column(db.Integer, db.ForeignKey('worker.worker_id'))
