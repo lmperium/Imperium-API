@@ -4,7 +4,7 @@ import json
 from app import create_app, db
 
 
-class DatabaseTest(unittest.TestCase):
+class AnalystTest(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app(config_name='testing')
