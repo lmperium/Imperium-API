@@ -14,12 +14,15 @@ class WorkerApiTest(unittest.TestCase):
             db.drop_all()
             db.create_all()
 
-        self.start_up_info = json.dumps(dict(
-            system_name='DESKTOP-R21',
-            system_type='x64-based-pc',
-            os_name='Microsoft Windows 10 Pro',
-            ip_address=['192.168.0.1', 'ipv6'],
-        ))
+        self.start_up_info = json.dumps({
+            'hostname': 'DESKTOP-R21',
+            'startup_info': {
+                'system_name': 'DESKTOP-R21',
+                'system_type': 'x64-based-pc',
+                'os_name': 'Microsoft Windows 10 Pro',
+                'ip_address': ['192.168.0.1', 'ipv6']
+            }
+        })
 
         self.analyst_info = json.dumps({
             'first_name': 'John',
@@ -36,19 +39,19 @@ class WorkerApiTest(unittest.TestCase):
         """ Test worker registration through the API."""
 
         # Successful registration
-        response = self.client.post('/api/workers', data=self.start_up_info)
+        response = self.client().post('/api/workers', data=self.start_up_info)
         self.assertEqual(201, response.status_code)
         self.assertIn('target_queue', str(response.data))
 
         # Test existing worker
-        response = self.client.post('/api/workers', data=self.start_up_info)
+        response = self.client().post('/api/workers', data=self.start_up_info)
         self.assertEqual(409, response.status_code)
         self.assertIn('Worker already registered', str(response.data))
 
     def test_get_worker_list(self):
         """ Test get all registered workers."""
         access_token = self._login()
-        response = self.client.get('/api/workers', headers=dict(Authorization=access_token))
+        response = self.client().get('/api/workers', headers=dict(Authorization=access_token))
         self.assertEqual(200, response.status_code)
         self.assertIn('DESKTOP-R21', str(response.data))
 
