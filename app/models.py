@@ -70,6 +70,25 @@ class Job(db.Model):
     status = db.Column(db.String(50), nullable=False)
     analyst_id = db.Column(db.Integer, db.ForeignKey('analyst.analyst_id'))
 
+    def from_dict(self, data):
+        for field in ['analyst_id', 'job_id', 'name', 'target', 'description']:
+            if field in data:
+                setattr(self, field, data[field])
+        setattr(self, 'status', 'Pending')
+
+    def to_dict(self):
+        data = dict(
+            job_id=self.job_id,
+            name=self.name,
+            target=self.target,
+            description=self.description,
+            start_time=self.start_time,
+            status=self.status,
+            analyst_id=self.analyst_id
+        )
+
+        return data
+
 
 class Worker(db.Model):
 
