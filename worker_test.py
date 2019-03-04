@@ -51,6 +51,11 @@ class WorkerApiTest(unittest.TestCase):
     def test_get_worker_list(self):
         """ Test get all registered workers."""
         access_token = self._login()
+
+        response = self.client().post('/api/workers', data=self.start_up_info)
+        self.assertEqual(201, response.status_code)
+        self.assertIn('target_queue', str(response.data))
+
         response = self.client().get('/api/workers', headers=dict(Authorization=access_token))
         self.assertEqual(200, response.status_code)
         self.assertIn('DESKTOP-R21', str(response.data))
