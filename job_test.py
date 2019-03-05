@@ -55,7 +55,7 @@ class JobApiTest(unittest.TestCase):
         return access_token, analyst_id
 
     def test_create_job(self):
-
+        """ Test job creation."""
         access_token, analyst_id = self._login()
 
         self.job['analyst_id'] = analyst_id
@@ -63,6 +63,35 @@ class JobApiTest(unittest.TestCase):
         response = self.client().post('api/jobs', headers=dict(Authorization=access_token), data=json.dumps(self.job))
         self.assertEqual(201, response.status_code)
         self.assertIn('job_id', str(response.data))
+
+    def test_get_jobs(self):
+        """ Test get all jobs."""
+        access_token, analyst_id = self._login()
+
+        self.job['analyst_id'] = analyst_id
+        self.client().post('api/jobs', headers=dict(Authorization=access_token), data=json.dumps(self.job))
+
+        response = self.client().get('api/jobs', headers=dict(Authorization=access_token))
+        self.assertEqual(200, response.status_code)
+        self.assertIn('test mq', str(response.data))
+
+    def test_get_job(self):
+        """Test get job by id."""
+        access_token, analyst_id = self._login()
+
+        self.job['analyst_id'] = analyst_id
+        response = self.client().post('api/jobs', headers=dict(Authorization=access_token), data=json.dumps(self.job))
+
+        res_jon = json.loads(response.data.decode('utf-8').replace("'", "\'"))
+        job_id = res_jon['job_id']
+
+        response = self.client().get(f'api/jobs/{job_id}', headers=dict(Authorization=access_token))
+        self.assertEqual(200, response.status_code)
+        self.assertIn('imp.wk.DESKTOP-RR5VV32', str(response.data))
+
+        response = self.client().get(f'api/jobs/34', headers=dict(Authorization=access_token))
+        self.assertEqual(404, response.status_code)
+        self.assertIn('Resource not found', str(response.data))
 
 
 if __name__ == '__main__':
