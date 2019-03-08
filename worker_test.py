@@ -15,9 +15,9 @@ class WorkerApiTest(unittest.TestCase):
             db.create_all()
 
         self.start_up_info = json.dumps({
-            'hostname': 'DESKTOP-R21',
+            'hostname': 'DESKTOP-RR5VV32',
             'startup_info': {
-                'system_name': 'DESKTOP-R21',
+                'system_name': 'DESKTOP-RR5VV32',
                 'system_type': 'x64-based-pc',
                 'os_name': 'Microsoft Windows 10 Pro',
                 'ip_address': ['192.168.0.1', 'ipv6']

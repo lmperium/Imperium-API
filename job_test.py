@@ -17,7 +17,7 @@ class JobApiTest(unittest.TestCase):
         self.job = {
                 'name': 'test mq',
                 'target': 'imp.wk.DESKTOP-RR5VV32',
-                'description': [
+                'commands': [
                     {
                         'module': 'file',
                         'file_target': 'hash12354',
