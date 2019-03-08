@@ -29,6 +29,7 @@ class Analyst(db.Model):
     username = db.Column(db.String(100), unique=True, index=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     registered_date = db.Column(db.DateTime, server_default=text('now()'), nullable=False)
+    jobs = db.relationship('Job', backref='Analyst', lazy='dynamic')
 
     def set_password(self, password):
         self.password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=15)
@@ -58,10 +59,28 @@ class Analyst(db.Model):
             self.set_password(data['password'])
 
 
+class Command(db.Model):
+
+    __tablename__ = 'command'
+
+    command_id = db.Column(db.Integer, primary_key=True)
+    command_name = db.Column(db.String(50), index=True, nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    response = db.Column(db.Text, nullable=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.job_id'))
+    worker_id = db.Column(db.Integer, db.ForeignKey('worker.worker_id'))
+
+    def from_dict(self, data, job_id, worker_id):
+        setattr(self, 'status', 'pending')
+        setattr(self, 'job_id', job_id)
+        setattr(self, 'worker_id', worker_id)
+        setattr(self, 'command_name', data[0]['module'])
+
+
 class Job(db.Model):
     __tablename__ = 'job'
 
-    job_id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(250), nullable=False)
     target = db.Column(db.String(250), nullable=False)
     description = db.Column(JSON, nullable=False)
@@ -83,10 +102,8 @@ class Job(db.Model):
             target=self.target,
             description=self.description,
             start_time=self.start_time,
-            status=self.status,
-            analyst_id=self.analyst_id
+            status=self.status
         )
-
         return data
 
 
@@ -94,7 +111,7 @@ class Worker(db.Model):
 
     __tablename__ = 'worker'
 
-    worker_id = db.Column(db.Integer, primary_key=True)
+    worker_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     hostname = db.Column(db.String(255), unique=True, index=True, nullable=False)
     status = db.Column(db.String(50), nullable=False)
     target_queue = db.Column(db.String(255), nullable=False, index=True)
@@ -125,15 +142,3 @@ class Worker(db.Model):
     def _generate_queue_name(data):
         queue_name = 'imp.wk.'
         return queue_name + data['hostname']
-
-
-class Command(db.Model):
-
-    __tablename__ = 'command'
-
-    command_id = db.Column(db.Integer, primary_key=True)
-    command_name = db.Column(db.String(50), index=True, nullable=False)
-    status = db.Column(db.String(50), nullable=False)
-    response = db.Column(db.Text, nullable=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('job.job_id'))
-    worker_id = db.Column(db.Integer, db.ForeignKey('worker.worker_id'))
