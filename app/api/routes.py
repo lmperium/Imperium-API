@@ -1,8 +1,8 @@
-import logging
-
 from app import db
+from app.api import constants
 from app.api.errors import error_response
-from app.models import Analyst, Job, Worker, to_collection_dict
+from app.models import Analyst, Job, Worker, Command, to_collection_dict
+from app.queue.rabbit_queue import RQueue
 from flask import Blueprint
 from flask import jsonify, request
 from flask_jwt_extended import jwt_required
@@ -36,7 +36,7 @@ def register_analyst():
     data = request.get_json(force=True) or {}
 
     # Validate required fields
-    if not _is_valid(data):
+    if not _is_valid(data, constants.ANALYST_REQ):
         return error_response(status_code=400, message='Missing values.')
 
     if _user_exists(data):
@@ -55,10 +55,8 @@ def register_analyst():
     return response
 
 
-def _is_valid(data):
-    required_fields = ['username', 'email', 'password', 'first_name', 'last_name']
-
-    for field in required_fields:
+def _is_valid(data, requirements):
+    for field in requirements:
         if field not in data:
             return False
 
@@ -120,13 +118,64 @@ def get_worker(worker_id: int):
 def create_job():
     data = request.get_json(force=True) or {}
 
-    pass
+    # TODO validate if it is a valid command.
+
+    # Validate data
+    if not _is_valid(data, constants.JOB_REQ):
+        return error_response(400, 'Missing values.')
+
+    analyst = Analyst.query.get(data['analyst_id'])
+    worker = Worker.query.filter_by(target_queue=data['target']).first()
+
+    # Save job into db
+    job = Job()
+    job.from_dict(data)
+
+    analyst.jobs.append(job)
+
+    db.session.add(analyst)
+    # Flushing data base to retrieve job id.
+    db.session.flush()
+
+    # Save command to database
+    command = Command()
+    command.from_dict(data['description'], job.job_id, worker.worker_id)
+
+    db.session.add(command)
+
+    db.session.commit()
+    # Send job description to queue
+    queue = RQueue()
+
+    if not queue.send_job(job.to_dict()):
+        return error_response(500, 'Error while sending message to message broker')
+
+    # Once the queue receives the command, return response.
+    # TODO - Return href and id of job/command in the response.
+    response = jsonify(job.to_dict())
+    response.status_code = 202
+
+    return response
+
+
+@bp.route('/jobs', methods=['GET'])
+@jwt_required
+def get_jobs():
+    response = Job.query.all()
+
+    return jsonify(to_collection_dict(response))
 
 
 @bp.route('/jobs/<int:job_id>', methods=['GET'])
 @jwt_required
 def get_job(job_id: int):
-    pass
+
+    job = Job.query.get(job_id)
+
+    if job is None:
+        return error_response(404, 'Resource not found.')
+
+    return jsonify(job.to_dict())
 
 
 @bp.route('/jobs/results', methods=['PUT'])
