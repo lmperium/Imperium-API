@@ -58,7 +58,21 @@ class WorkerApiTest(unittest.TestCase):
 
         response = self.client().get('/api/workers', headers=dict(Authorization=access_token))
         self.assertEqual(200, response.status_code)
-        self.assertIn('DESKTOP-R21', str(response.data))
+        self.assertIn('DESKTOP-RR5VV32', str(response.data))
+
+    def test_get_worker_by_id(self):
+        """ Test get worker by id."""
+        response = self.client().post('/api/workers', data=self.start_up_info)
+        self.assertEqual(201, response.status_code)
+        self.assertIn('target_queue', str(response.data))
+
+        access_token = self._login()
+        body = json.loads(response.data.decode('utf-8').replace("'", "\'"))
+        worker_id = body['worker_id']
+
+        response = self.client().get(f'/api/workers/{worker_id}', headers=dict(Authorization=access_token))
+        self.assertEqual(200, response.status_code)
+        self.assertIn('DESKTOP-RR5VV32', str(response.data))
 
     def _login(self):
         response = self.client().post('api/analysts', data=self.analyst_info)

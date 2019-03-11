@@ -104,10 +104,16 @@ def register_worker():
     return response
 
 
-@bp.route('/workers/<int:job_id>', methods=['GET'])
+@bp.route('/workers/<int:worker_id>', methods=['GET'])
 @jwt_required
 def get_worker(worker_id: int):
-    pass
+
+    worker = Worker.query.get(worker_id)
+
+    if worker is None:
+        return error_response(404, 'Resource not found.')
+
+    return jsonify(worker.to_dict())
 
 
 # Job routes
