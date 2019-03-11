@@ -25,9 +25,10 @@ class RQueue:
 
         channel.confirm_delivery()
 
-        p = channel.basic_publish(exchange='work',
-                                  routing_key=job['target'],
-                                  body=str(job['description'][0]))
+        for command in job['description']:
+            p = channel.basic_publish(exchange='work',
+                                      routing_key=job['target'],
+                                      body=str(command))
 
         connection.close()
 
@@ -37,4 +38,11 @@ class RQueue:
         return True
 
     def send_heartbeat(self):
+
+        connection = self._connect()
+
+        channel = connection.channel()
+        channel.exchange_declare(exchange='heartbeat',
+                                 exchange_type='fanout')
+
         pass
