@@ -128,6 +128,7 @@ class Worker(db.Model):
 
     def to_dict(self):
         data = {
+            'worker_id': self.worker_id,
             'hostname': self.hostname,
             'registered_date': self.registered_date,
             'status': self.status,
