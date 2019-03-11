@@ -74,7 +74,7 @@ class Command(db.Model):
         setattr(self, 'status', 'pending')
         setattr(self, 'job_id', job_id)
         setattr(self, 'worker_id', worker_id)
-        setattr(self, 'command_name', data[0]['module'])
+        setattr(self, 'command_name', data['module'])
 
 
 class Job(db.Model):
@@ -102,7 +102,8 @@ class Job(db.Model):
             target=self.target,
             description=self.description,
             start_time=self.start_time,
-            status=self.status
+            status=self.status,
+            tracking=dict(url=f'http://localhost:5000/api/jobs/results/{self.job_id}')
         )
         return data
 
