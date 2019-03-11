@@ -136,18 +136,23 @@ def create_job():
     # Save job into db
     job = Job()
     job.from_dict(data)
-
     analyst.jobs.append(job)
 
     db.session.add(analyst)
+
     # Flushing data base to retrieve job id.
     db.session.flush()
 
-    # Save command to database
-    command = Command()
-    command.from_dict(data['description'], job.job_id, worker.worker_id)
+    command_list = data['description']
 
-    db.session.add(command)
+    if len(command_list) > 0:
+        # Insert commands into DB
+        for cmd in command_list:
+            command = Command()
+            command.from_dict(cmd, job_id=job.job_id, worker_id=worker.worker_id)
+            db.session.add(command)
+    else:
+        return error_response(400, 'A job must contain at least one command.')
 
     db.session.commit()
     # Send job description to queue
@@ -157,7 +162,6 @@ def create_job():
         return error_response(500, 'Error while sending message to message broker')
 
     # Once the queue receives the command, return response.
-    # TODO - Return href and id of job/command in the response.
     response = jsonify(job.to_dict())
     response.status_code = 202
 
