@@ -17,7 +17,7 @@ class JobApiTest(unittest.TestCase):
         self.job = {
                 'name': 'test mq',
                 'target': 'imp.wk.DESKTOP-RR5VV32',
-                'commands': [
+                'description': [
                     {
                         'module': 'file',
                         'file_target': 'hash12354',
@@ -61,7 +61,7 @@ class JobApiTest(unittest.TestCase):
         self.job['analyst_id'] = analyst_id
 
         response = self.client().post('api/jobs', headers=dict(Authorization=access_token), data=json.dumps(self.job))
-        self.assertEqual(201, response.status_code)
+        self.assertEqual(202, response.status_code)
         self.assertIn('job_id', str(response.data))
 
     def test_get_jobs(self):
