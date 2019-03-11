@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
@@ -12,10 +14,10 @@ def create_app(config_name):
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = 'SECRET'
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET', default=None)
 
     # Blueprint register
-    from app.api.analysts import bp as api_bp
+    from app.api.routes import bp as api_bp
     from app.auth.auth import bp as auth_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')

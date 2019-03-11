@@ -1,4 +1,6 @@
 instance/
+app/queue/consumer_test.py
+app/queue/publisher_test.py
 migrations/
 venv/
 __pycache__/
@@ -9,3 +11,4 @@ object_representations
 *.pyc
 *.sql
 
+TODO
