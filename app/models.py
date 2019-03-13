@@ -76,6 +76,16 @@ class Command(db.Model):
         setattr(self, 'worker_id', worker_id)
         setattr(self, 'command_name', data['module'])
 
+    def to_dict(self):
+        data = dict(
+            command_id=self.command_id,
+            command_name=self.command_name,
+            status=self.status,
+            response=self.response
+        )
+
+        return data
+
 
 class Job(db.Model):
     __tablename__ = 'job'
