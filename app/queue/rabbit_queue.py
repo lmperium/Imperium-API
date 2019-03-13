@@ -5,18 +5,21 @@ import pika
 class RQueue:
 
     def __init__(self):
-        self.host = os.environ.get('RABBIT_MQ_HOST')
+        self.host = os.environ.get('RABBITMQ_HOST')
+        self.user = os.environ.get('RABBITMQ_USER')
+        self.password = os.environ.get('RABBITMQ_PWD')
+        self.port = os.environ.get('RABBITMQ_PORT')
+        self.v_host = os.environ.get('RABBITMQ_VHOST')
 
     def _connect(self):
 
-        parameters = pika.ConnectionParameters(host=self.host)
+        credentials = pika.PlainCredentials(self.user, self.password)
+        parameters = pika.ConnectionParameters(host=self.host, virtual_host=self.v_host, credentials=credentials)
         connection = pika.BlockingConnection(parameters=parameters)
 
         return connection
 
     def send_job(self, job):
-
-        # Initialize connection
         connection = self._connect()
 
         channel = connection.channel()
