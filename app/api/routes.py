@@ -4,7 +4,7 @@ from app.api.errors import error_response
 from app.models import Analyst, Job, Worker, Command, to_collection_dict
 from app.queue.rabbit_queue import RQueue
 from flask import Blueprint
-from flask import jsonify, request
+from flask import jsonify, request, Response
 from flask_jwt_extended import jwt_required
 
 bp = Blueprint('api', __name__)
@@ -113,7 +113,10 @@ def get_worker(worker_id: int):
     if worker is None:
         return error_response(404, 'Resource not found.')
 
-    return jsonify(worker.to_dict())
+    response = jsonify(worker.to_dict())
+    response.status_code = 200
+
+    return response
 
 
 # Job routes
@@ -173,7 +176,10 @@ def create_job():
 def get_jobs():
     response = Job.query.all()
 
-    return jsonify(to_collection_dict(response))
+    response = jsonify(to_collection_dict(response))
+    response.status_code = 200
+
+    return response
 
 
 @bp.route('/jobs/<int:job_id>', methods=['GET'])
@@ -185,16 +191,49 @@ def get_job(job_id: int):
     if job is None:
         return error_response(404, 'Resource not found.')
 
-    return jsonify(job.to_dict())
+    response = jsonify(job.to_dict())
+    response.status_code = 200
+
+    return response
 
 
 @bp.route('/jobs/results', methods=['PUT'])
-@jwt_required
+# @jwt_required
 def upload_results():
-    pass
+
+    data = request.get_json(force=True) or {}
+
+    insert = db.session.query(Command)\
+        .filter(Command.command_id == data['command_id'])\
+        .update({'response': data['response'], 'status': 'completed'})
+
+    command = db.session.query(Command).filter(Command.command_id == data['command_id']).first()
+
+    # Check job and see if all jobs are completed to update the job status
+    query = db.session.query(Command).join(Job).filter(command.job_id == Job.job_id).all()
+
+    _check_job_completion(command=command, query_result=query)
+
+    if insert:
+        db.session.commit()
+    else:
+        return error_response(409, 'Error while processing the upload.')
+
+    return Response(status=204, mimetype='application/json')
 
 
 @bp.route('/jobs/results/<int:job_id>', methods=['GET'])
 @jwt_required
 def get_results():
     pass
+
+
+def _check_job_completion(command, query_result):
+    """Checks if all commands that are part of a job have been completed, if so, update the job's status."""
+    count = 0
+    for command in query_result:
+        if command.status == 'completed':
+            count += 1
+
+    if count == len(query_result):
+        db.session.query(Job).filter(command.job_id == Job.job_id).update({'status': 'completed'})
