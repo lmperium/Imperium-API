@@ -225,13 +225,17 @@ def upload_results():
 @bp.route('/jobs/results/<int:job_id>', methods=['GET'])
 @jwt_required
 def get_results(job_id: int):
+    job = Job.query.get(job_id)
+    payload = job.to_dict()
 
-    query = db.session.query(Command).filter(Command.job_id == job_id).all()
+    commands = db.session.query(Command).filter(Command.job_id == job_id).all()
 
-    if not len(query):
+    if not len(commands):
         return error_response(400, 'Invalid ID provided.')
 
-    response = jsonify(to_collection_dict(query))
+    payload['commands'] = to_collection_dict(commands)
+
+    response = jsonify(payload)
     response.status_code = 200
 
     return response

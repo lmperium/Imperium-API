@@ -112,6 +112,7 @@ class Job(db.Model):
             target=self.target,
             description=self.description,
             start_time=self.start_time,
+            end_time=self.end_time,
             status=self.status,
             tracking=dict(url=f'http://localhost:5000/api/jobs/results/{self.job_id}')
         )
