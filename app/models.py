@@ -100,16 +100,19 @@ class Job(db.Model):
     analyst_id = db.Column(db.Integer, db.ForeignKey('analyst.analyst_id'))
 
     def from_dict(self, data):
-        for field in ['analyst_id', 'job_id', 'name', 'target', 'description']:
+        for field in ['analyst_id', 'job_id', 'name', 'targets', 'description']:
             if field in data:
-                setattr(self, field, data[field])
+                if field == 'targets':
+                    setattr(self, "target", data[field])
+                else:
+                    setattr(self, field, data[field])
         setattr(self, 'status', 'Pending')
 
     def to_dict(self):
         data = dict(
             job_id=self.job_id,
             name=self.name,
-            target=self.target,
+            targets=self.target,
             description=self.description,
             start_time=self.start_time,
             end_time=self.end_time,
