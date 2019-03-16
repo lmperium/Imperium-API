@@ -1,3 +1,5 @@
+import time
+
 from app import db
 from app.api import constants
 from app.api.errors import error_response
@@ -125,6 +127,9 @@ def get_worker(worker_id: int):
 @bp.route('/jobs', methods=['POST'])
 @jwt_required
 def create_job():
+
+    start = time.time()
+
     data = request.get_json(force=True) or {}
 
     # TODO validate if it is a valid command.
@@ -134,7 +139,6 @@ def create_job():
         return error_response(400, 'Missing values.')
 
     analyst = Analyst.query.get(data['analyst_id'])
-    worker = Worker.query.filter_by(target_queue=data['target']).first()
 
     # Save job into db
     job = Job()
@@ -150,10 +154,12 @@ def create_job():
 
     if len(command_list) > 0:
         # Insert commands into DB
-        for cmd in command_list:
-            command = Command()
-            command.from_dict(cmd, job_id=job.job_id, worker_id=worker.worker_id)
-            db.session.add(command)
+        for target_queue in data['targets']:
+            worker = Worker.query.filter_by(target_queue=target_queue).first()
+            for cmd in command_list:
+                command = Command()
+                command.from_dict(cmd, job_id=job.job_id, worker_id=worker.worker_id)
+                db.session.add(command)
     else:
         return error_response(400, 'A job must contain at least one command.')
 
@@ -167,6 +173,8 @@ def create_job():
     # Once the queue receives the command, return response.
     response = jsonify(job.to_dict())
     response.status_code = 202
+
+    print(time.time() - start)
 
     return response
 

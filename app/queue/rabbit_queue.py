@@ -28,15 +28,17 @@ class RQueue:
 
         channel.confirm_delivery()
 
+        targets = job['targets'].replace('{', '').replace('}', '').split(',')
+
         for command in job['description']:
-            p = channel.basic_publish(exchange='work',
-                                      routing_key=job['target'],
-                                      body=str(command))
+            for target in targets:
+                p = channel.basic_publish(exchange='work',
+                                          routing_key=target,
+                                          body=str(command))
+                if not p:
+                    return False
 
         connection.close()
-
-        if not p:
-            return False
 
         return True
 
