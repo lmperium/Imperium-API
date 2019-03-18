@@ -140,6 +140,13 @@ def create_job():
 
     analyst = Analyst.query.get(data['analyst_id'])
 
+    if data['targets'] == 'all':
+        query = db.session.query(Worker.target_queue).all()
+        targets = [hostname[0] for hostname in query]
+        data['targets'] = targets
+    else:
+        targets = data['targets']
+
     # Save job into db
     job = Job()
     job.from_dict(data)
@@ -154,7 +161,7 @@ def create_job():
 
     if len(command_list) > 0:
         # Insert commands into DB
-        for target_queue in data['targets']:
+        for target_queue in targets:
             worker = Worker.query.filter_by(target_queue=target_queue).first()
             for cmd in command_list:
                 command = Command()

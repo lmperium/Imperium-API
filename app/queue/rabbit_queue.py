@@ -28,7 +28,7 @@ class RQueue:
 
         channel.confirm_delivery()
 
-        targets = job['targets'].replace('{', '').replace('}', '').split(',')
+        targets = job['targets']
 
         for command in job['description']:
             for target in targets:

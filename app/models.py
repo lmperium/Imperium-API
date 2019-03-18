@@ -112,7 +112,7 @@ class Job(db.Model):
         data = dict(
             job_id=self.job_id,
             name=self.name,
-            targets=self.target,
+            targets=self.target.replace('{', '').replace('}', '').split(','),
             description=self.description,
             start_time=self.start_time,
             end_time=self.end_time,
