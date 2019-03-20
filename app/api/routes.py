@@ -159,26 +159,31 @@ def create_job():
 
     job_request = job.to_dict()
 
+    queue = RQueue()
+
     if len(command_list) > 0:
-        # Insert commands into DB
-        for i, target_queue in enumerate(targets):
+        for target_queue in targets:
             worker = Worker.query.filter_by(target_queue=target_queue).first()
-            for cmd in command_list:
+            for i, cmd in enumerate(command_list):
                 command = Command()
                 command.from_dict(cmd, job_id=job.job_id, worker_id=worker.worker_id)
                 db.session.add(command)
                 db.session.flush()
 
-            job_request['description'][i]['command_id'] = command.command_id
+                job_request['description'][i]['command_id'] = command.command_id
+
+            job_request['targets'] = target_queue
+
+            # Send job request to queue
+            if not queue.send_job(job_request):
+                return error_response(500, 'Error while sending message to message broker')
+
     else:
         return error_response(400, 'A job must contain at least one command.')
 
-    db.session.commit()
-    # Send job description to queue
-    queue = RQueue()
+    queue.close()
 
-    if not queue.send_job(job_request):
-        return error_response(500, 'Error while sending message to message broker')
+    db.session.commit()
 
     # Once the queue receives the command, return response.
     response = jsonify(job_request)
