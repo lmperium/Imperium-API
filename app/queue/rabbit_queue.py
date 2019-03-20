@@ -1,5 +1,6 @@
 import os
 import pika
+import time
 
 
 class RQueue:
@@ -10,6 +11,7 @@ class RQueue:
         self.password = os.environ.get('RABBITMQ_PWD')
         self.port = os.environ.get('RABBITMQ_PORT')
         self.v_host = os.environ.get('RABBITMQ_VHOST')
+        self.connection = self._connect()
 
     def _connect(self):
 
@@ -20,27 +22,27 @@ class RQueue:
         return connection
 
     def send_job(self, job):
-        connection = self._connect()
-
-        channel = connection.channel()
+        s = time.time()
+        channel = self.connection.channel()
         channel.exchange_declare(exchange='work',
                                  exchange_type='direct')
 
         channel.confirm_delivery()
 
-        targets = job['targets']
+        target = job['targets']
 
         for command in job['description']:
-            for target in targets:
-                p = channel.basic_publish(exchange='work',
-                                          routing_key=target,
-                                          body=str(command))
-                if not p:
-                    return False
+            p = channel.basic_publish(exchange='work',
+                                      routing_key=target,
+                                      body=str(command))
+            if not p:
+                return False
 
-        connection.close()
-
+        print('Send job completed in: ', time.time() - s)
         return True
+
+    def close(self):
+        self.connection.close()
 
     def send_heartbeat(self):
 
