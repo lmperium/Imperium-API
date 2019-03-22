@@ -31,12 +31,11 @@ class RQueue:
 
         target = job['targets']
 
-        for command in job['description']:
-            p = channel.basic_publish(exchange='work',
-                                      routing_key=target,
-                                      body=str(command))
-            if not p:
-                return False
+        p = channel.basic_publish(exchange='work',
+                                  routing_key=target,
+                                  body=str(job['description']))
+        if not p:
+            return False
 
         print('Send job completed in: ', time.time() - s)
         return True
