@@ -5,6 +5,7 @@ from app.api import constants
 from app.api.errors import error_response
 from app.models import Analyst, Job, Worker, Command, to_collection_dict
 from app.queue.rabbit_queue import RQueue
+from datetime import datetime
 from flask import Blueprint
 from flask import jsonify, request, Response
 from flask_jwt_extended import jwt_required
@@ -125,7 +126,7 @@ def get_worker(worker_id: int):
 
 
 @bp.route('/jobs', methods=['POST'])
-@jwt_required
+# @jwt_required
 def create_job():
 
     start = time.time()
@@ -272,4 +273,11 @@ def _check_job_completion(command, query_result):
             count += 1
 
     if count == len(query_result):
-        db.session.query(Job).filter(command.job_id == Job.job_id).update({'status': 'completed'})
+        db.session.query(Job)\
+            .filter(command.job_id == Job.job_id)\
+            .update(
+            {
+                'status': 'completed',
+                'end_time': datetime.now()
+            }
+        )
