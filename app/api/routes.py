@@ -9,6 +9,7 @@ from datetime import datetime
 from flask import Blueprint
 from flask import jsonify, request, Response
 from flask_jwt_extended import jwt_required
+from sqlalchemy import update
 
 bp = Blueprint('api', __name__)
 
@@ -176,6 +177,7 @@ def create_job():
             job_request['targets'] = target_queue
 
             # Send job request to queue
+            db.session.commit()
             if not queue.send_job(job_request):
                 return error_response(500, 'Error while sending message to message broker')
 
@@ -183,8 +185,6 @@ def create_job():
         return error_response(400, 'A job must contain at least one command.')
 
     queue.close()
-
-    db.session.commit()
 
     # Once the queue receives the command, return response.
     response = jsonify(job_request)
@@ -227,21 +227,22 @@ def upload_results():
 
     data = request.get_json(force=True) or {}
 
-    insert = db.session.query(Command)\
-        .filter(Command.command_id == data['command_id'])\
-        .update({'response': data['response'], 'status': 'completed'})
+    stmt = update(Command).where(Command.command_id == data['command_id']).\
+        values(response=data['response'], status='completed')
 
-    command = db.session.query(Command).filter(Command.command_id == data['command_id']).first()
-
-    # Check job and see if all jobs are completed to update the job status
-    query = db.session.query(Command).join(Job).filter(command.job_id == Job.job_id).all()
-
-    _check_job_completion(command=command, query_result=query)
+    insert = db.session.execute(stmt)
 
     if insert:
+        command = db.session.query(Command).filter(Command.command_id == data['command_id']).first()
+
+        # Check job and see if all jobs are completed to update the job status
+        query = db.session.query(Command).join(Job).filter(command.job_id == Job.job_id).all()
+
+        _check_job_completion(command=command, query_result=query)
+
         db.session.commit()
     else:
-        return error_response(409, 'Error while processing the upload.')
+        return error_response(500, 'Error while processing the upload.')
 
     return Response(status=204, mimetype='application/json')
 
