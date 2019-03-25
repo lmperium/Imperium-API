@@ -25,7 +25,6 @@ def check_status():
                            .values(status='offline')
                     db.session.execute(stmt)
                     db.session.commit()
-                    print('changed')
 
 
 migrate = Migrate(app, db)
