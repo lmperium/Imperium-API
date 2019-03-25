@@ -266,6 +266,35 @@ def get_results(job_id: int):
     return response
 
 
+@bp.route('/heartbeats', methods=['PUT'])
+def heartbeat_response():
+
+    data = request.get_json() or {}
+
+    worker = Worker.query.filter_by(target_queue=data['target_queue']).first()
+
+    if worker is None:
+        return error_response(404, 'Resource not available.')
+
+    if worker.status == 'offline':
+        stmt = update(Worker)\
+            .where(Worker.target_queue == worker.target_queue)\
+            .values(status='active', last_seen=datetime.now())
+    else:
+        stmt = update(Worker)\
+            .where(Worker.target_queue == worker.target_queue)\
+            .values(last_seen=datetime.now())
+
+    query = db.session.execute(stmt)
+
+    if not query:
+        return error_response(500, 'Error while processing heartbeat update.')
+
+    db.session.commit()
+
+    return Response(status=204, mimetype='application/json')
+
+
 def _check_job_completion(command, query_result):
     """Checks if all commands that are part of a job have been completed, if so, update the job's status."""
     count = 0
