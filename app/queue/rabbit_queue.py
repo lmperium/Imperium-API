@@ -43,12 +43,3 @@ class RQueue:
     def close(self):
         self.connection.close()
 
-    def send_heartbeat(self):
-
-        connection = self._connect()
-
-        channel = connection.channel()
-        channel.exchange_declare(exchange='heartbeat',
-                                 exchange_type='fanout')
-
-        pass
