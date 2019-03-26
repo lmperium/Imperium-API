@@ -269,7 +269,10 @@ def get_results(job_id: int):
 @bp.route('/heartbeats', methods=['PUT'])
 def heartbeat_response():
 
-    data = request.get_json() or {}
+    data = request.get_json(force=True) or {}
+
+    if 'target_queue' not in data:
+        return error_response(400, 'Missing field target_queue.')
 
     worker = Worker.query.filter_by(target_queue=data['target_queue']).first()
 
