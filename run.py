@@ -1,3 +1,5 @@
+import os
+
 from app import create_app, db
 from app.models import Worker
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -6,7 +8,7 @@ from flask_migrate import Migrate
 from sqlalchemy import update
 
 
-app = create_app('development')
+app = create_app(os.environ.get('FLASK_ENV'))
 
 
 def check_status():
